@@ -1,0 +1,164 @@
+Evidence for roll number 23l-3014
+Generated: 2026-10-22 17:16:37 UTC
+Bucket: cv-23l-3014
+EC2 address: http://3.83.236.254
+Lambda address: https://c7h7qnmhdiebbhfnnnqb6lhbse0vcoae.lambda-url.us-east-1.on.aws
+
+== caller ==
+$ aws sts get-caller-identity --query Account --output text
+613538400230
+
+== public-access ==
+$ aws s3api get-public-access-block --bucket cv-23l-3014
+{
+    "PublicAccessBlockConfiguration": {
+        "BlockPublicAcls": true,
+        "IgnorePublicAcls": true,
+        "BlockPublicPolicy": true,
+        "RestrictPublicBuckets": true
+    }
+}
+
+== versioning ==
+$ aws s3api get-bucket-versioning --bucket cv-23l-3014
+{
+    "Status": "Enabled"
+}
+
+== objects ==
+$ aws s3 ls s3://cv-23l-3014/site/ --recursive
+2026-10-22 11:41:47          0 site/
+2026-10-22 11:45:11      62070 site/cv.pdf
+2026-10-22 11:45:09       3401 site/index.html
+2026-10-22 11:45:09       1597 site/style.css
+
+== ec2-policy ==
+$ aws iam get-role-policy --role-name cv-ec2-role-23l-3014 --policy-name cv-ec2-s3-read
+{
+    "RoleName": "cv-ec2-role-23l-3014",
+    "PolicyName": "cv-ec2-s3-read",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "ReadSiteObjects",
+                "Effect": "Allow",
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::cv-23l-3014/site/*"
+            },
+            {
+                "Sid": "ListSitePrefixOnly",
+                "Effect": "Allow",
+                "Action": "s3:ListBucket",
+                "Resource": "arn:aws:s3:::cv-23l-3014",
+                "Condition": {
+                    "StringEquals": {
+                        "s3:prefix": "site/"
+                    }
+                }
+            }
+        ]
+    }
+}
+
+== lambda-policy ==
+$ aws iam list-attached-role-policies --role-name cv-lambda-role-23l-3014
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AWSLambdaBasicExecutionRole",
+            "PolicyArn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        }
+    ]
+}
+$ aws iam get-role-policy --role-name cv-lambda-role-23l-3014 --policy-name cv-lambda-s3-read
+{
+    "RoleName": "cv-lambda-role-23l-3014",
+    "PolicyName": "cv-lambda-s3-read",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "ReadSiteObjects",
+                "Effect": "Allow",
+                "Action": "s3:GetObject",
+                "Resource": "arn:aws:s3:::cv-23l-3014/site/*"
+            }
+        ]
+    }
+}
+
+== security-group ==
+$ aws ec2 describe-security-groups --group-ids sg-060e8bf808ddfe309 --query SecurityGroups[].{GroupId:GroupId,GroupName:GroupName,Inbound:IpPermissions}
+[
+    {
+        "GroupId": "sg-060e8bf808ddfe309",
+        "GroupName": "cv-sg-23l-3014",
+        "Inbound": [
+            {
+                "IpProtocol": "tcp",
+                "FromPort": 80,
+                "ToPort": 80,
+                "UserIdGroupPairs": [],
+                "IpRanges": [
+                    {
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "Ipv6Ranges": [],
+                "PrefixListIds": []
+            }
+        ]
+    }
+]
+
+== instance ==
+$ aws ec2 describe-instances --instance-ids i-05e433c1940e48385 --query Reservations[0].Instances[0].{InstanceId:InstanceId,Type:InstanceType,State:State.Name,PublicIp:PublicIpAddress,HttpTokens:MetadataOptions.HttpTokens,InstanceProfile:IamInstanceProfile.Arn}
+{
+    "InstanceId": "i-05e433c1940e48385",
+    "Type": "t3.micro",
+    "State": "running",
+    "PublicIp": "3.83.236.254",
+    "HttpTokens": "required",
+    "InstanceProfile": "arn:aws:iam::613538400230:instance-profile/cv-ec2-role-23l-3014"
+}
+
+== endpoints ==
+TARGET             URL                                                                    STATUS CONTENT-TYPE
+ec2 /              http://3.83.236.254/                                                   200 text/html; charset=UTF-8
+ec2 /style.css     http://3.83.236.254/style.css                                          200 text/css
+ec2 /cv.pdf        http://3.83.236.254/cv.pdf                                             200 application/pdf
+lambda /           https://c7h7qnmhdiebbhfnnnqb6lhbse0vcoae.lambda-url.us-east-1.on.aws/  200 text/html; charset=utf-8
+lambda /style.css  https://c7h7qnmhdiebbhfnnnqb6lhbse0vcoae.lambda-url.us-east-1.on.aws/style.css 200 text/css; charset=utf-8
+lambda /cv.pdf     https://c7h7qnmhdiebbhfnnnqb6lhbse0vcoae.lambda-url.us-east-1.on.aws/cv.pdf 200 application/pdf
+lambda /anything   https://c7h7qnmhdiebbhfnnnqb6lhbse0vcoae.lambda-url.us-east-1.on.aws/anything 404 text/html; charset=utf-8
+s3 direct          https://cv-23l-3014.s3.amazonaws.com/site/index.html                   403 application/xml
+Footer on EC2:    Hosted on: EC2 i-05e433c1940e48385
+Footer on Lambda: Hosted on: Lambda cv-func-23l-3014
+
+== lambda-logs ==
+$ aws logs tail /aws/lambda/cv-func-23l-3014 --since 1h --format short
+2026-10-22T17:06:36 INIT_START Runtime Version: python:3.14.mainline.v75	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:a80514a5081d762ddcf7613643fa0106781d9c6d290a1c3536b6290ceef969a8
+2026-10-22T17:06:36 START RequestId: b8500a83-df8e-491c-9f7e-417aadf7f191 Version: $LATEST
+2026-10-22T17:06:37 {"fn": "cv-func-23l-3014", "path": "/", "status": 200, "ms": 351.5}
+2026-10-22T17:06:37 END RequestId: b8500a83-df8e-491c-9f7e-417aadf7f191
+2026-10-22T17:06:37 REPORT RequestId: b8500a83-df8e-491c-9f7e-417aadf7f191	Duration: 353.87 ms	Billed Duration: 880 ms	Memory Size: 128 MB	Max Memory Used: 96 MB	Init Duration: 525.34 ms
+2026-10-22T17:06:37 START RequestId: 58b0757e-d19b-41ab-aa70-1002f3606628 Version: $LATEST
+2026-10-22T17:06:37 {"fn": "cv-func-23l-3014", "path": "/style.css", "status": 200, "ms": 28.6}
+2026-10-22T17:06:37 END RequestId: 58b0757e-d19b-41ab-aa70-1002f3606628
+2026-10-22T17:06:37 REPORT RequestId: 58b0757e-d19b-41ab-aa70-1002f3606628	Duration: 58.66 ms	Billed Duration: 59 ms	Memory Size: 128 MB	Max Memory Used: 96 MB
+2026-10-22T17:06:38 START RequestId: 838dedbd-b229-4128-bf67-b68879acaa6d Version: $LATEST
+2026-10-22T17:06:38 {"fn": "cv-func-23l-3014", "path": "/favicon.ico", "status": 404, "ms": 0.0}
+2026-10-22T17:06:38 END RequestId: 838dedbd-b229-4128-bf67-b68879acaa6d
+2026-10-22T17:06:38 REPORT RequestId: 838dedbd-b229-4128-bf67-b68879acaa6d	Duration: 1.60 ms	Billed Duration: 2 ms	Memory Size: 128 MB	Max Memory Used: 96 MB
+2026-10-22T17:16:47 INIT_START Runtime Version: python:3.14.mainline.v75	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:a80514a5081d762ddcf7613643fa0106781d9c6d290a1c3536b6290ceef969a8
+2026-10-22T17:16:48 START RequestId: 71843d0c-4271-4640-a090-7623f54a74ce Version: $LATEST
+
+== log-retention ==
+$ aws logs describe-log-groups --log-group-name-prefix /aws/lambda/cv-func-23l-3014 --query logGroups[].{logGroupName:logGroupName,retentionInDays:retentionInDays}
+[
+    {
+        "logGroupName": "/aws/lambda/cv-func-23l-3014",
+        "retentionInDays": 7
+    }
+]
