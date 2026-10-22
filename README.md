@@ -43,18 +43,6 @@ flowchart LR
 
 **Lambda path:** the browser hits the function URL over HTTPS, and the function looks at the path (`/`, `/style.css`, `/cv.pdf`) to decide which file to fetch from S3 with its role. It sends that file back with the right content type, puts `Lambda` plus the function name in the footer of the page, and base64-encodes the PDF since it's binary.
 
-## What's in the repo
-
-```
-README.md                  this file
-collect-evidence.sh        evidence script
-evidence.txt               output from my run of the script
-site/                      index.html, style.css, cv.pdf (same files as in s3://cv-23l-3014/site/)
-ec2/user-data.sh           installs Apache, sets up the sync script and a systemd timer, runs the sync once
-ec2/sync-cv.sh             copies site/ from S3 into the web root, fixes the footer, writes to /var/log/cv-sync.log
-lambda/lambda_function.py  the Lambda code
-iam/                       trust and permission policies for both roles
-```
 
 ## Access denied from the instance
 
